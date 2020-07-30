@@ -9,16 +9,12 @@
     3. 任务二中的tutorial可以先看看：
         （1）了解开源的数据集MNIST，补充了解ImageNet、Cifar-10等，这样的经典数据集用在什么场景；
         （2）了解LR算法的基本原理
-        （3）安装theano。补充了解TensorFlow、theano、pytorch的差异
+        （3）看懂theano写的LR算法的基本框架。补充了解TensorFlow、theano、pytorch的差异
 
-以上是这两天的安排。代码上我现在还不知道该怎么办。。。
-
-其中补充了解是我联想到的可能以后我们会接触到的内容，可以自己看看。
-
-有问题提出来。
+其中补充“了解”是我联想到的可能以后我们会接触到的内容，可以自己看看。
 
 
 
-任务二：改写成theano
+任务二：改写成tensorflow或pytorch
 
 任务三：
