@@ -12,7 +12,7 @@
 
 
 
-任务二：改写成tensorflow或pytorch
+任务二：手写
 
 任务三：
 
