@@ -1,20 +1,13 @@
 # Theano_LR
 
-任务二：手写LR
-
-    (1)LR
-    (2)交叉熵
-    (3)MSGD
-
 任务三：
 
     1. done 篮球的剩下2个视频人工分类
-    2. 重做 annotation feature
-    3. 改main
+    2. done 重做 annotation feature
+    3. done 改main
     4. 测试不同参数
     
-    
-    
+ppt
     
     
     
@@ -30,6 +23,10 @@ done 我们这两天（小目标周四晚上前）先完成：
 
 其中补充“了解”是我联想到的可能以后我们会接触到的内容，可以看看。
 
+done 任务二：手写LR
 
+    (1)LR
+    (2)交叉熵
+    (3)MSGD
 
 
