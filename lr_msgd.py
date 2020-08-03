@@ -35,7 +35,7 @@ class MSGD_LogisticRegression(object):
         self.weight_decay = weight_decay
         self.done_looping = False
         
-        self.fn_model = "train_set_" + str(self.n_epochs)
+        self.fn_model = "train_set_" + str(np.shape(X_train)[0]) + " lr_" + str(lr) +" bs_" +str(batch_size) + " early_stop" + " weight_decay"
         self.TPR = []
         self.FPR = []
         
@@ -57,33 +57,26 @@ class MSGD_LogisticRegression(object):
 
     # predict_function_ljf
     def compute_prob_y(self, x):
-        # Prob_y = np.exp(np.dot(x, self.theta))
+
         # x : (n_sample,n_in) W: (n_in, n_out)
         Prob_y = np.exp(np.dot(x, self.W) + self.b)
         sum_k = np.sum(Prob_y, axis=1)
         Prob_y /= sum_k.reshape(sum_k.shape[0], 1)  # normalization
-#        pred_y = []
-#        for i in range(np.shape(Prob_y)[0]):
-#            k = Prob_y[i].tolist()
-#            max_index = k.index(max(k))
-#            pred_y.append(max_index)
-#        pred_y = np.c_[pred_y]  # transform list to column vector
+
         return Prob_y
 
     # loss_function_ljf
     def loss_function(self, x, y): # y = label, [1 2 ... n]
 
-#        Prob_y = np.exp(np.dot(x, self.W) + self.b)
-#        sum_k = np.sum(Prob_y, axis=1)
-#        Prob_y /= sum_k.reshape(sum_k.shape[0], 1)  # normalization
         Prob_y = self.compute_prob_y(x)
         loss = 0
         for i in range(x.shape[0]):
-            # loss -= np.log(Prob_y[i, y[i] - 1])
             # mean_cross_entropy
             loss -= y[i] * np.log(Prob_y[i,  y[i]]) + ( 1 - y[i]) * np.log(Prob_y[i, 1 - y[i]])
+            # loss -= np.log(Prob_y[i, y[i] - 1])
+        loss = loss / x.shape[0]
 
-        return loss / x.shape[0]
+        return loss
     
     def error(self, flag):
         if flag == 1:
@@ -98,7 +91,7 @@ class MSGD_LogisticRegression(object):
         return np.mean(np.not_equal(y_pred, y))
 
 
-    def compute_p_y_given_x(self, batch_ind, flag_dataset = 1):
+    def compute_p_y_given_x(self, batch_ind, flag_dataset = 1, j = -1):
         
         ind = batch_ind
         
@@ -112,11 +105,11 @@ class MSGD_LogisticRegression(object):
 #            x = self.X_test[0: tt * self.batch_size]
             x = self.X_test
             
-
-#        self.exp_x_multipy_W_plus_b = np.exp(np.dot(x, self.W) + self.b)
-#        sigma = np.sum(self.exp_x_multipy_W_plus_b, axis = 1)
-#        self.p_y_given_x = self.exp_x_multipy_W_plus_b / sigma.reshape(sigma.shape[0], 1)
+#        if j == -1:
+#            self.
+            
         self.p_y_given_x = self.compute_prob_y(x)
+        
         return self.p_y_given_x
         
         
@@ -137,10 +130,48 @@ class MSGD_LogisticRegression(object):
             self.delta_W = (-1.0 * np.dot(coef.transpose(), x) / y.shape[0]).transpose() + self.lamda * self.W
             self.delta_b = -1.0 * np.mean(coef, axis=0) + self.lamda * self.b
         
+        
     def update_W_b(self):
         self.W -= self.lr * self.delta_W
         self.b -= self.lr * self.delta_b
         
+        
+    def line_search(self, batch_ind):
+
+        i = 0
+        c = 0.5
+        tau = 0.5
+        slope = (self.delta_W** 2).sum(axis=0)
+
+        ind = batch_ind
+        x = self.X_train[ind * self.batch_size: (ind + 1) * self.batch_size]
+        y = self.y_train[ind * self.batch_size: (ind + 1) * self.batch_size]
+        
+        
+
+        while i < self.n_class:
+            t_learning_rate = 1.0
+            loss_ori = loss_function(x, y)
+            self.W[:,i] -= t_learning_rate * self.delta_W[:,i]
+            prev_lr = t_learning_rate
+            while 1:
+                tt = c * t_learning_rate * slope[i]
+                self.compute_p_y_given_x(ind, j=i)
+                loss_curr = self.loss_function(x, y)
+                if loss_curr <= loss_ori -tt:
+                    break
+                else:
+                    t_learning_rate *=tau
+                    if t_learning_rate < self.lr:
+                        t_learning_rate = self.lr
+                        self.W[:, i] += (prev_lr - t_learning_rate) * self.delta_W[:, i]
+                        self.compute_p_y_given_x(ind, j=i)
+                        break
+                self.W[:, i] += (prev_lr - t_learning_rate) * self.delta_W[:, i]
+                prev_lr = t_learning_rate
+            i += 1
+            
+            
     def predict(self,batch_ind):
         
         test_predict = self.compute_p_y_given_x(batch_ind, flag_dataset=3)
@@ -151,7 +182,8 @@ class MSGD_LogisticRegression(object):
         false_pos = sum((self.y_test == 0) * (test_predict == 1))
         false_neg = sum((self.y_test == 1) * (test_predict == 0))
         self.TPR.append(true_pos/(false_neg + true_pos))
-        self.FPR.append(false_pos/(false_pos + true_neg))# False Positive Rate
+        self.FPR.append(false_pos/(false_pos + true_neg))# False Positive Rate/ False ALarm Rate
+        
         
     def draw_ROC(self):
         
@@ -219,11 +251,9 @@ class MSGD_LogisticRegression(object):
                     if self.patience <= it:
                         done_looping = True
                         break
-                    if best_validation_loss < self.early_stop_thresh:
-                        break
-                    
-#        return self.W, self.b       
-    
+                    if self.early_stop_thresh > 0 :
+                        if best_validation_loss < self.early_stop_thresh:
+                            break    
     
 
 
